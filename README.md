@@ -16,7 +16,7 @@ Never miss when Claude Code needs your attention! Get instant VS Code notificati
 Install from the VS Code marketplace or:
 
 ```bash
-code --install-extension YOUR_PUBLISHER_NAME.claude-code-notifier
+code --install-extension erdemgiray.claude-code-notifier
 ```
 
 ### Step 2: Configure Claude Code Hooks
