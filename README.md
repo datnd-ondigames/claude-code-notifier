@@ -43,15 +43,6 @@ Add to `.claude/settings.local.json` in your project directory:
         ]
       },
       {
-        "matcher": "idle_prompt",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "echo 'Claude is waiting for your input' > /tmp/claude-notify && terminal-notifier -title \"Claude Code\" -message \"Claude is waiting for your input\" -sound Glass"
-          }
-        ]
-      },
-      {
         "matcher": "elicitation_dialog",
         "hooks": [
           {
@@ -81,7 +72,8 @@ Once installed and configured, the extension works automatically:
 
 1. **Permission Requests**: Get notified when Claude needs permission to run commands
 2. **Questions**: Get notified when Claude asks you questions via `AskUserQuestion`
-3. **Waiting for Input**: Get notified when Claude is idle and waiting for your input
+
+**Note:** The configuration excludes `idle_prompt` (task completion notifications) to reduce notification noise. You'll only be notified when Claude is blocked and needs your input.
 
 ## 🧪 Testing
 
@@ -99,12 +91,32 @@ The extension watches a trigger file at `/tmp/claude-notify` for changes. When C
 
 ## 📝 Customization
 
+### Custom Messages
+
 You can customize the notification messages by editing the hooks configuration. Change the text after `echo` to customize what appears in the notification.
 
 Example:
 ```json
 "command": "echo 'Hey! Claude needs you!' > /tmp/claude-notify"
 ```
+
+### Optional: Task Completion Notifications
+
+If you want to be notified when Claude finishes tasks and is waiting for your next input, add the `idle_prompt` hook:
+
+```json
+{
+  "matcher": "idle_prompt",
+  "hooks": [
+    {
+      "type": "command",
+      "command": "echo 'Claude is waiting for your input' > /tmp/claude-notify && terminal-notifier -title \"Claude Code\" -message \"Claude is waiting for your input\" -sound Glass"
+    }
+  ]
+}
+```
+
+**Note:** This can be noisy if you prefer to monitor Claude's progress yourself. Most users only need `permission_prompt` and `elicitation_dialog`.
 
 ## 🐛 Troubleshooting
 
