@@ -1,42 +1,66 @@
 {
   "name": "claude-code-notifier",
   "displayName": "Claude Code Notifier",
-  "description": "Get VS Code notifications when Claude Code needs your attention - never miss a question or permission request",
-  "version": "1.0.0",
+  "description": "Notification dashboard for Claude Code: toasts, history, external dashboard, guided hook install.",
+  "version": "2.0.0",
   "publisher": "erdemgiray",
-  "author": {
-    "name": "Erdem Giray"
-  },
+  "author": { "name": "Erdem Giray" },
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/egiray/claude-code-notifier"
-  },
-  "keywords": [
-    "claude",
-    "claude-code",
-    "anthropic",
-    "ai",
-    "notifications",
-    "hooks",
-    "productivity"
-  ],
-  "engines": {
-    "vscode": "^1.85.0"
-  },
-  "categories": [
-    "Other"
-  ],
-  "activationEvents": [
-    "onStartupFinished"
-  ],
+  "repository": { "type": "git", "url": "https://github.com/egiray/claude-code-notifier" },
+  "keywords": ["claude", "claude-code", "anthropic", "ai", "notifications", "hooks", "productivity"],
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Other"],
+  "activationEvents": ["onStartupFinished"],
   "main": "./extension.js",
   "contributes": {
     "commands": [
-      {
-        "command": "claude-notifier.notify",
-        "title": "Claude Code: Send Test Notification"
+      { "command": "claude-notifier.notify",           "title": "Claude Notifier: Send Test Notification" },
+      { "command": "claudeNotifier.openPanel",         "title": "Claude Notifier: Open Panel" },
+      { "command": "claudeNotifier.openDashboard",     "title": "Claude Notifier: Open Dashboard in Browser" },
+      { "command": "claudeNotifier.runWizard",         "title": "Claude Notifier: Run Setup Wizard" },
+      { "command": "claudeNotifier.installHooks",      "title": "Claude Notifier: Install Hooks" },
+      { "command": "claudeNotifier.removeHooks",       "title": "Claude Notifier: Remove Hooks" },
+      { "command": "claudeNotifier.clearHistory",      "title": "Claude Notifier: Clear History" },
+      { "command": "claudeNotifier.showLog",           "title": "Claude Notifier: Show Log File" }
+    ],
+    "configuration": {
+      "title": "Claude Code Notifier",
+      "properties": {
+        "claudeNotifier.enabled":             { "type": "boolean", "default": true },
+        "claudeNotifier.logPath":             { "type": "string",  "default": "", "description": "Override log path. Empty uses ~/.claude/notifier.log." },
+        "claudeNotifier.suppressWhenFocused": { "type": "boolean", "default": false },
+        "claudeNotifier.showAllWorkspaces":   { "type": "boolean", "default": false },
+
+        "claudeNotifier.events.permission_prompt.enabled":  { "type": "boolean", "default": true },
+        "claudeNotifier.events.permission_prompt.severity": { "type": "string", "enum": ["info","warning","error"], "default": "warning" },
+        "claudeNotifier.events.permission_prompt.sound":    { "type": "boolean", "default": true },
+
+        "claudeNotifier.events.elicitation_dialog.enabled":  { "type": "boolean", "default": true },
+        "claudeNotifier.events.elicitation_dialog.severity": { "type": "string", "enum": ["info","warning","error"], "default": "warning" },
+        "claudeNotifier.events.elicitation_dialog.sound":    { "type": "boolean", "default": true },
+
+        "claudeNotifier.events.idle_prompt.enabled":  { "type": "boolean", "default": false },
+        "claudeNotifier.events.idle_prompt.severity": { "type": "string", "enum": ["info","warning","error"], "default": "info" },
+        "claudeNotifier.events.idle_prompt.sound":    { "type": "boolean", "default": false },
+
+        "claudeNotifier.events.stop.enabled":  { "type": "boolean", "default": false },
+        "claudeNotifier.events.stop.severity": { "type": "string", "enum": ["info","warning","error"], "default": "info" },
+        "claudeNotifier.events.stop.sound":    { "type": "boolean", "default": false },
+
+        "claudeNotifier.events.subagent_stop.enabled":  { "type": "boolean", "default": false },
+        "claudeNotifier.events.subagent_stop.severity": { "type": "string", "enum": ["info","warning","error"], "default": "info" },
+        "claudeNotifier.events.subagent_stop.sound":    { "type": "boolean", "default": false },
+
+        "claudeNotifier.history.maxEntries":      { "type": "number",  "default": 500, "minimum": 50, "maximum": 10000 },
+        "claudeNotifier.statusBar.enabled":       { "type": "boolean", "default": true },
+        "claudeNotifier.statusBar.clickAction":   { "type": "string",  "enum": ["dashboard","panel","quickPick"], "default": "dashboard" },
+        "claudeNotifier.actions.showFocusWindow": { "type": "boolean", "default": true },
+        "claudeNotifier.actions.showOpenTerminal":{ "type": "boolean", "default": true },
+        "claudeNotifier.actions.showSnooze":      { "type": "boolean", "default": false },
+        "claudeNotifier.snoozeMinutes":           { "type": "number",  "default": 5, "minimum": 1, "maximum": 60 },
+        "claudeNotifier.server.enabled":          { "type": "boolean", "default": true },
+        "claudeNotifier.server.port":             { "type": "number",  "default": 0, "description": "0 = auto-pick starting 37100." }
       }
-    ]
+    }
   }
 }
