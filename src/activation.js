@@ -3,7 +3,7 @@ const vscode = require('vscode');
 let disposables = [];
 let output;
 
-function activate(context) {
+async function activate(context) {
   output = vscode.window.createOutputChannel('Claude Notifier');
   output.appendLine('[activation] Claude Notifier 2.0 starting');
 
@@ -58,6 +58,30 @@ function activate(context) {
   const wizard = require('./wizard');
   wizard.register(context, output);
   wizard.maybeRunFirstRun(context).catch(e => output.appendLine('[wizard] ' + e.message));
+
+  const { createServer } = require('./server');
+  const server = createServer({ config, history, mediaRoot: context.asAbsolutePath('media'), output });
+  server.on('focus', ({ id }) => {
+    vscode.commands.executeCommand('workbench.action.focusActiveEditorGroup');
+    history.markRead(id);
+  });
+  server.on('dismiss', ({ id }) => history.markRead(id));
+  await server.start();
+  serverPort = server.getPort();
+  disposables.push(server);
+
+  config.on('change', async (next, prev) => {
+    if (next.server.enabled !== prev.server.enabled || next.server.port !== prev.server.port) {
+      server.stop();
+      await server.start();
+      serverPort = server.getPort();
+    }
+  });
+
+  context.subscriptions.push(vscode.commands.registerCommand('claudeNotifier.openDashboard', () => {
+    if (!serverPort) { vscode.window.showWarningMessage('Dashboard server not running.'); return; }
+    vscode.env.openExternal(vscode.Uri.parse('http://127.0.0.1:' + serverPort));
+  }));
 
   const testCmd = vscode.commands.registerCommand('claude-notifier.notify', () => {
     vscode.window.showInformationMessage('Claude Notifier test notification');
