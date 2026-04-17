@@ -1,4 +1,5 @@
 const vscode = require('vscode');
+const path = require('path');
 const { execFile } = require('child_process');
 
 function showToast(severity, msg, buttons) {
@@ -8,19 +9,40 @@ function showToast(severity, msg, buttons) {
   return fn('Claude: ' + msg, ...buttons.map(b => b.label));
 }
 
-function focusWindowOS(output) {
+function focusLinuxWindowForCwd(cwd, output) {
+  execFile('wmctrl', ['-l'], (err, stdout) => {
+    if (err) {
+      execFile('wmctrl', ['-a', 'Visual Studio Code'], e2 => {
+        if (e2) output && output.appendLine('[notifier] wmctrl -a: ' + e2.message);
+      });
+      return;
+    }
+    const lines = stdout.split('\n').filter(l => l.endsWith('Visual Studio Code'));
+    let match = null;
+    if (cwd) {
+      const base = path.basename(cwd);
+      match = lines.find(l => l.includes(' ' + base + ' - Visual Studio Code') || l.includes(' - ' + base + ' - Visual Studio Code'));
+    }
+    const target = match || lines[0];
+    if (!target) return;
+    const wid = target.split(/\s+/)[0];
+    execFile('wmctrl', ['-ia', wid], e2 => {
+      if (e2) output && output.appendLine('[notifier] wmctrl -ia: ' + e2.message);
+    });
+  });
+}
+
+function focusWindowOS(output, cwd) {
   if (process.platform === 'darwin') {
     execFile('osascript', ['-e', 'tell application "Visual Studio Code" to activate'], err => {
       if (err) output && output.appendLine('[notifier] osascript: ' + err.message);
     });
   } else if (process.platform === 'linux') {
-    execFile('wmctrl', ['-a', 'Visual Studio Code'], err => {
-      if (err) output && output.appendLine('[notifier] wmctrl: ' + err.message);
-    });
+    focusLinuxWindowForCwd(cwd, output);
   }
 }
 
-function createNotifier({ config, history, sound, getFocused, getWorkspaceCwd, getPort, output }) {
+function createNotifier({ config, history, sound, getFocused, getWorkspaceCwd, getPort, osNotifier, output }) {
   let snoozedUntil = 0;
   const snoozeListeners = new Set();
   const onSnoozeChange = cb => { snoozeListeners.add(cb); return () => snoozeListeners.delete(cb); };
@@ -45,9 +67,9 @@ function createNotifier({ config, history, sound, getFocused, getWorkspaceCwd, g
     return btns.slice(0, 3);
   }
 
-  async function runAction(action) {
+  async function runAction(action, evt) {
     if (action === 'focus') {
-      focusWindowOS(output);
+      focusWindowOS(output, evt && evt.cwd);
       await vscode.commands.executeCommand('workbench.action.focusActiveEditorGroup');
     } else if (action === 'terminal') {
       await vscode.commands.executeCommand('workbench.action.terminal.focus');
@@ -69,13 +91,31 @@ function createNotifier({ config, history, sound, getFocused, getWorkspaceCwd, g
     if (isSnoozed()) return;
     if (cfg.suppressWhenFocused && getFocused()) return;
 
-    const buttons = buildButtons();
-    showToast(e.severity, evt.msg, buttons).then(chosen => {
-      if (!chosen) return;
-      const hit = buttons.find(b => b.label === chosen);
-      if (hit) runAction(hit.action).catch(err => output && output.appendLine('[notifier] ' + err.message));
-      history.markRead(evt.id);
-    });
+    const osEnabled = cfg.osNotifications && cfg.osNotifications.enabled && osNotifier;
+    const suppressToast = osEnabled && cfg.osNotifications.replaceToast;
+
+    if (osEnabled) {
+      osNotifier.notify({
+        title: 'Claude Code',
+        body: evt.msg,
+        severity: e.severity,
+        requireDismiss: !!cfg.osNotifications.requireDismiss,
+        onClick: () => {
+          runAction('focus', evt).catch(err => output && output.appendLine('[notifier] ' + err.message));
+          history.markRead(evt.id);
+        }
+      });
+    }
+
+    if (!suppressToast) {
+      const buttons = buildButtons();
+      showToast(e.severity, evt.msg, buttons).then(chosen => {
+        if (!chosen) return;
+        const hit = buttons.find(b => b.label === chosen);
+        if (hit) runAction(hit.action, evt).catch(err => output && output.appendLine('[notifier] ' + err.message));
+        history.markRead(evt.id);
+      });
+    }
 
     if (e.sound) sound.play(evt.type);
   }
@@ -90,4 +130,4 @@ function createNotifier({ config, history, sound, getFocused, getWorkspaceCwd, g
   };
 }
 
-module.exports = { createNotifier };
+module.exports = { createNotifier, focusWindowOS };

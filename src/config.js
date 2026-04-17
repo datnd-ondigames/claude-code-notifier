@@ -30,7 +30,12 @@ function readAll() {
       showSnooze:       c.get('actions.showSnooze')
     },
     snoozeMinutes: c.get('snoozeMinutes'),
-    server: { enabled: c.get('server.enabled'), port: c.get('server.port') }
+    server: { enabled: c.get('server.enabled'), port: c.get('server.port') },
+    osNotifications: {
+      enabled:        c.get('osNotifications.enabled'),
+      replaceToast:   c.get('osNotifications.replaceToast'),
+      requireDismiss: c.get('osNotifications.requireDismiss')
+    }
   };
 }
 

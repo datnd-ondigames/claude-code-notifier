@@ -45,12 +45,13 @@ function createHistoryStore({ maxEntries }) {
   function markAllRead()    { const ids = [...unread]; unread.clear(); for (const id of ids) emitter.emit('read', id); }
   function clear()          { buf = []; seenIds.clear(); unread.clear(); emitter.emit('cleared'); }
   function list()           { return buf.slice(); }
+  function getById(id)      { return buf.find(e => e.id === id) || null; }
   function unreadCount()    { return unread.size; }
   function isUnread(id)     { return unread.has(id); }
   function recentUnread(n)  { return buf.filter(e => unread.has(e.id)).slice(0, n); }
 
   return {
-    add, markRead, markAllRead, clear, list, unreadCount, isUnread, recentUnread, setMax,
+    add, markRead, markAllRead, clear, list, getById, unreadCount, isUnread, recentUnread, setMax,
     on:  (ev, cb) => emitter.on(ev, cb),
     off: (ev, cb) => emitter.off(ev, cb),
     stop: () => emitter.removeAllListeners()

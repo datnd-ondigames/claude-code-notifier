@@ -1,9 +1,9 @@
 {
-  "name": "claude-code-notifier",
-  "displayName": "Claude Code Notifier",
-  "description": "Notification dashboard for Claude Code: toasts, history, external dashboard, guided hook install.",
-  "version": "2.0.0",
-  "publisher": "erdemgiray",
+  "name": "claude-notify-native",
+  "displayName": "Claude Notify Native",
+  "description": "Claude Code notifier with native OS notifications, dashboard, history, and guided hook install.",
+  "version": "2.1.0",
+  "publisher": "felix",
   "author": { "name": "Erdem Giray" },
   "license": "MIT",
   "repository": { "type": "git", "url": "https://github.com/egiray/claude-code-notifier" },
@@ -59,7 +59,10 @@
         "claudeNotifier.actions.showSnooze":      { "type": "boolean", "default": false },
         "claudeNotifier.snoozeMinutes":           { "type": "number",  "default": 5, "minimum": 1, "maximum": 60 },
         "claudeNotifier.server.enabled":          { "type": "boolean", "default": true },
-        "claudeNotifier.server.port":             { "type": "number",  "default": 0, "description": "0 = auto-pick starting 37100." }
+        "claudeNotifier.server.port":             { "type": "number",  "default": 0, "description": "0 = auto-pick starting 37100." },
+        "claudeNotifier.osNotifications.enabled":        { "type": "boolean", "default": false, "description": "Show native OS notifications (Linux: gdbus/libnotify, macOS: osascript). Click focuses the VS Code window matching the event's workspace." },
+        "claudeNotifier.osNotifications.replaceToast":   { "type": "boolean", "default": true,  "description": "When OS notifications fire, suppress the in-editor VS Code toast to avoid double-notify." },
+        "claudeNotifier.osNotifications.requireDismiss": { "type": "boolean", "default": false, "description": "Keep OS notifications visible until dismissed. Sends expire_timeout=0 and urgency=critical (GNOME keeps these sticky). Errors are always critical regardless of this setting." }
       }
     }
   }

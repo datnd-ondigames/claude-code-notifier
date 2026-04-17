@@ -1,6 +1,7 @@
 const vscode = require('vscode');
 const fs = require('fs');
 const path = require('path');
+const { focusWindowOS } = require('./notifier');
 
 function createWebview({ context, history, mediaRoot }) {
   let panel = null;
@@ -36,7 +37,12 @@ function createWebview({ context, history, mediaRoot }) {
     panel.webview.html = buildHtml();
     panel.webview.onDidReceiveMessage(msg => {
       if (msg.type === 'ready')   sendHistory();
-      if (msg.type === 'focus')   { vscode.commands.executeCommand('workbench.action.focusActiveEditorGroup'); history.markRead(msg.id); }
+      if (msg.type === 'focus')   {
+        const evt = history.getById(msg.id);
+        focusWindowOS(null, evt && evt.cwd);
+        vscode.commands.executeCommand('workbench.action.focusActiveEditorGroup');
+        history.markRead(msg.id);
+      }
       if (msg.type === 'dismiss') history.markRead(msg.id);
     });
     panel.onDidDispose(() => { panel = null; });

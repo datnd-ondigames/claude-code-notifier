@@ -49,7 +49,8 @@ async function activate(context) {
   const sound = createSound({ mediaRoot: context.asAbsolutePath('media'), output });
   context.subscriptions.push(vscode.commands.registerCommand('claudeNotifier._testSound', () => sound.play('permission_prompt')));
 
-  const { createNotifier } = require('./notifier');
+  const { createNotifier, focusWindowOS } = require('./notifier');
+  const { createOsNotifier } = require('./os-notifier');
 
   function getFocused() { return vscode.window.state.focused; }
   function getWorkspaceCwd() {
@@ -58,8 +59,11 @@ async function activate(context) {
   }
   let serverPort = 0;
 
+  const osNotifier = createOsNotifier({ output });
+  disposables.push({ stop: () => osNotifier.stop() });
+
   const notifier = createNotifier({
-    config, history, sound, output,
+    config, history, sound, output, osNotifier,
     getFocused, getWorkspaceCwd,
     getPort: () => serverPort
   });
@@ -78,6 +82,8 @@ async function activate(context) {
   const server = createServer({ config, history, mediaRoot: context.asAbsolutePath('media'), output });
   function wireServerEvents() {
     server.on('focus', ({ id }) => {
+      const evt = history.getById(id);
+      focusWindowOS(output, evt && evt.cwd);
       vscode.commands.executeCommand('workbench.action.focusActiveEditorGroup');
       history.markRead(id);
     });
@@ -127,7 +133,15 @@ async function activate(context) {
   tailer.on('ok',    () => statusBar.setError(false));
 
   const testCmd = vscode.commands.registerCommand('claude-notifier.notify', () => {
-    vscode.window.showInformationMessage('Claude Notifier test notification');
+    const id = (Date.now().toString(36) + Math.random().toString(36).slice(2, 12))
+      .padEnd(22, '0').slice(0, 22).toUpperCase();
+    history.add({
+      id, ts: Date.now(),
+      type: 'permission_prompt',
+      msg: 'Claude Notifier test notification',
+      cwd: getWorkspaceCwd(),
+      session: null, pid: process.pid
+    });
   });
   context.subscriptions.push(testCmd);
 
