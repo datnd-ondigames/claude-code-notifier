@@ -1,7 +1,8 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; media-src 'self';" />
   <title>Claude Notifier</title>
   <link rel="stylesheet" href="./dashboard.css" />
@@ -9,19 +10,27 @@
 </head>
 <body>
   <header>
-    <div class="title">Claude Notifier <span class="port" id="port"></span></div>
-    <div class="chips" id="chips"></div>
-    <input id="search" placeholder="search…" />
-    <button id="mark-all">mark all read</button>
-    <button id="clear">clear</button>
-    <label><input type="checkbox" id="arrival-sound" /> sound on arrival</label>
+    <div class="title">Claude Notifier <span class="port" id="port" aria-label="server port"></span></div>
+    <div class="chips" id="chips" role="group" aria-label="event type filters"></div>
+    <input id="search" type="search" placeholder="search…" aria-label="search events" />
+    <button id="mark-all" type="button" title="Mark all events as read">mark all read</button>
+    <button id="clear" type="button" title="Clear all events">clear</button>
+    <label class="toggle"><input type="checkbox" id="arrival-sound" /> sound on arrival</label>
   </header>
-  <main id="list" aria-live="polite"></main>
+  <main id="list" role="list" aria-live="polite" aria-label="events" tabindex="-1">
+    <div class="empty" id="empty" data-show="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+      <p>No events yet. Waiting for Claude Code hooks…</p>
+    </div>
+  </main>
   <footer>
-    <span id="conn">disconnected</span>
-    <span id="count">0 events</span>
+    <span id="conn" role="status">disconnected</span>
+    <span id="count" aria-live="off">0 events</span>
   </footer>
   <audio id="pling" preload="auto"></audio>
+  <template id="icon-info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></template>
+  <template id="icon-warning"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></template>
+  <template id="icon-error"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></template>
   <script src="./dashboard.js"></script>
 </body>
 </html>
