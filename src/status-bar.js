@@ -53,12 +53,17 @@ function createStatusBar({ config, history, notifier, getPort, output }) {
   history.on('event', render);
   history.on('read', render);
   history.on('cleared', render);
-  notifier.onSnoozeChange(render);
+  const unsubSnooze = notifier.onSnoozeChange(render);
   config.on('change', render);
   render();
 
   function stop() {
     clearInterval(tick);
+    history.off('event', render);
+    history.off('read', render);
+    history.off('cleared', render);
+    unsubSnooze();
+    config.off('change', render);
     clickDisposable.dispose();
     item.dispose();
   }

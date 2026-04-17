@@ -76,11 +76,14 @@ async function activate(context) {
 
   const { createServer } = require('./server');
   const server = createServer({ config, history, mediaRoot: context.asAbsolutePath('media'), output });
-  server.on('focus', ({ id }) => {
-    vscode.commands.executeCommand('workbench.action.focusActiveEditorGroup');
-    history.markRead(id);
-  });
-  server.on('dismiss', ({ id }) => history.markRead(id));
+  function wireServerEvents() {
+    server.on('focus', ({ id }) => {
+      vscode.commands.executeCommand('workbench.action.focusActiveEditorGroup');
+      history.markRead(id);
+    });
+    server.on('dismiss', ({ id }) => history.markRead(id));
+  }
+  wireServerEvents();
   await server.start();
   serverPort = server.getPort();
   disposables.push(server);
@@ -88,6 +91,7 @@ async function activate(context) {
   config.on('change', async (next, prev) => {
     if (next.server.enabled !== prev.server.enabled || next.server.port !== prev.server.port) {
       server.stop();
+      wireServerEvents();
       await server.start();
       serverPort = server.getPort();
     }

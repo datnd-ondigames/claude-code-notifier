@@ -123,9 +123,13 @@ async function runRemove() {
     { placeHolder: 'Legacy cleanup?' }
   );
   if (!alsoLegacy) return;
-  const r = hw.uninstall({ scope: scope.value, workspaceRoot: workspaceRoot(), alsoLegacy: alsoLegacy.value });
-  const total = r.results.reduce((n, x) => n + (x.removed || 0), 0);
-  vscode.window.showInformationMessage(`Removed ${total} hook entries.`);
+  try {
+    const r = hw.uninstall({ scope: scope.value, workspaceRoot: workspaceRoot(), alsoLegacy: alsoLegacy.value });
+    const total = r.results.reduce((n, x) => n + (x.removed || 0), 0);
+    vscode.window.showInformationMessage(`Removed ${total} hook entries.`);
+  } catch (e) {
+    vscode.window.showErrorMessage('Remove hooks failed: ' + e.message);
+  }
 }
 
 function register(context, output) {

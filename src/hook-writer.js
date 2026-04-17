@@ -62,7 +62,8 @@ const HOOK_EVENT_MAP = {
 function commandFor(eventType) {
   const msg = DEFAULT_MESSAGES[eventType] || eventType;
   const safeMsg = msg.replace(/'/g, "'\\''");
-  return `node ${HELPER_PATH} ${eventType} '${safeMsg}' ${SENTINEL}`;
+  const safePath = HELPER_PATH.replace(/'/g, "'\\''");
+  return `node '${safePath}' ${eventType} '${safeMsg}' ${SENTINEL}`;
 }
 
 function ensureHelper() {
