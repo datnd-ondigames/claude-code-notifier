@@ -83,6 +83,11 @@ async function activate(context) {
     vscode.env.openExternal(vscode.Uri.parse('http://127.0.0.1:' + serverPort));
   }));
 
+  const { createWebview } = require('./webview');
+  const webview = createWebview({ context, history, mediaRoot: context.asAbsolutePath('media') });
+  context.subscriptions.push(vscode.commands.registerCommand('claudeNotifier.openPanel', () => webview.open()));
+  disposables.push(webview);
+
   const testCmd = vscode.commands.registerCommand('claude-notifier.notify', () => {
     vscode.window.showInformationMessage('Claude Notifier test notification');
   });
