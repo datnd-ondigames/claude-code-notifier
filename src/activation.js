@@ -51,6 +51,10 @@ function activate(context) {
   history.on('event', evt => notifier.handle(evt));
   disposables.push(notifier);
 
+  const { createStatusBar } = require('./status-bar');
+  const statusBar = createStatusBar({ config, history, notifier, getPort: () => serverPort, output });
+  disposables.push(statusBar);
+
   const testCmd = vscode.commands.registerCommand('claude-notifier.notify', () => {
     vscode.window.showInformationMessage('Claude Notifier test notification');
   });
