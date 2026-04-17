@@ -88,6 +88,25 @@ async function activate(context) {
   context.subscriptions.push(vscode.commands.registerCommand('claudeNotifier.openPanel', () => webview.open()));
   disposables.push(webview);
 
+  context.subscriptions.push(
+    vscode.commands.registerCommand('claudeNotifier.clearHistory', () => {
+      history.clear();
+      vscode.window.showInformationMessage('Claude Notifier history cleared.');
+    }),
+    vscode.commands.registerCommand('claudeNotifier.showLog', async () => {
+      const p = config.get().logPath;
+      try {
+        const doc = await vscode.workspace.openTextDocument(p);
+        await vscode.window.showTextDocument(doc);
+      } catch (e) {
+        vscode.window.showErrorMessage('Cannot open log: ' + e.message);
+      }
+    })
+  );
+
+  tailer.on('error', () => statusBar.setError(true));
+  tailer.on('ok',    () => statusBar.setError(false));
+
   const testCmd = vscode.commands.registerCommand('claude-notifier.notify', () => {
     vscode.window.showInformationMessage('Claude Notifier test notification');
   });
