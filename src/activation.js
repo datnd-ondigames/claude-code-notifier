@@ -7,6 +7,12 @@ function activate(context) {
   output = vscode.window.createOutputChannel('Claude Notifier');
   output.appendLine('[activation] Claude Notifier 2.0 starting');
 
+  const { createConfig } = require('./config');
+  const config = createConfig();
+  output.appendLine('[activation] config: ' + JSON.stringify(config.get()));
+  config.on('change', next => output.appendLine('[config] changed, enabled=' + next.enabled));
+  disposables.push(config);
+
   const testCmd = vscode.commands.registerCommand('claude-notifier.notify', () => {
     vscode.window.showInformationMessage('Claude Notifier test notification');
   });
