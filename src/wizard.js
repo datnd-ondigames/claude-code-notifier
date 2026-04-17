@@ -75,17 +75,28 @@ async function runWizard(context, lastPreset) {
     ? '\n\n⚠ Legacy /tmp/claude-notify detected. Run "Claude Notifier: Remove Hooks" with legacy cleanup after install.'
     : '';
 
-  const choice = await vscode.window.showInformationMessage(
-    `Install hooks in:\n${pathsText}${legacyWarn}\n\nJSON:\n${preview.slice(0, 1500)}${preview.length > 1500 ? '\n…' : ''}`,
-    { modal: true },
-    'Install', 'Copy to clipboard'
-  );
-  if (choice === 'Copy to clipboard') {
-    await vscode.env.clipboard.writeText(preview);
-    vscode.window.showInformationMessage('Hook JSON copied to clipboard.');
-    return null;
+  while (true) {
+    const choice = await vscode.window.showInformationMessage(
+      `Install Claude Notifier hooks?`,
+      {
+        modal: true,
+        detail: `Targets:\n${pathsText}\n\nEvents: ${events.join(', ')}${legacyWarn}`
+      },
+      'Install', 'Show JSON', 'Copy JSON'
+    );
+    if (choice === 'Show JSON') {
+      const doc = await vscode.workspace.openTextDocument({ language: 'json', content: preview });
+      await vscode.window.showTextDocument(doc, { preview: true });
+      continue;
+    }
+    if (choice === 'Copy JSON') {
+      await vscode.env.clipboard.writeText(preview);
+      vscode.window.showInformationMessage('Hook JSON copied to clipboard.');
+      return null;
+    }
+    if (choice !== 'Install') return null;
+    break;
   }
-  if (choice !== 'Install') return null;
 
   try {
     const r = hw.install({ scope: scope.value, workspaceRoot: workspaceRoot(), eventTypes: events });
