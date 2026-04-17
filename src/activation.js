@@ -34,6 +34,23 @@ function activate(context) {
   const sound = createSound({ mediaRoot: context.asAbsolutePath('media'), output });
   context.subscriptions.push(vscode.commands.registerCommand('claudeNotifier._testSound', () => sound.play('permission_prompt')));
 
+  const { createNotifier } = require('./notifier');
+
+  function getFocused() { return vscode.window.state.focused; }
+  function getWorkspaceCwd() {
+    const f = vscode.workspace.workspaceFolders;
+    return f && f[0] ? f[0].uri.fsPath : null;
+  }
+  let serverPort = 0;
+
+  const notifier = createNotifier({
+    config, history, sound, output,
+    getFocused, getWorkspaceCwd,
+    getPort: () => serverPort
+  });
+  history.on('event', evt => notifier.handle(evt));
+  disposables.push(notifier);
+
   const testCmd = vscode.commands.registerCommand('claude-notifier.notify', () => {
     vscode.window.showInformationMessage('Claude Notifier test notification');
   });
