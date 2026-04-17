@@ -59,7 +59,7 @@
     };
   }
 
-  const state = { events: [], filter: new Set(EVENT_TYPES), search: '', soundOn: false, unread: new Set() };
+  const state = { events: [], filter: new Set(EVENT_TYPES), search: '', soundOn: false, notifyOn: false, unread: new Set() };
 
   const $list    = document.getElementById('list');
   const $empty   = document.getElementById('empty');
@@ -70,6 +70,7 @@
   const $pling   = document.getElementById('pling');
   const $port    = document.getElementById('port');
   const $arrival = document.getElementById('arrival-sound');
+  const $sysnotify = document.getElementById('system-notify');
 
   EVENT_TYPES.forEach(t => {
     const c = document.createElement('button');
@@ -91,6 +92,49 @@
 
   $search.oninput = () => { state.search = $search.value.toLowerCase(); schedule(); };
   $arrival.onchange = () => { state.soundOn = $arrival.checked; };
+
+  const notifySupported = typeof window !== 'undefined'
+    && 'Notification' in window
+    && window.__MODE !== 'webview';
+  if (!notifySupported) {
+    $sysnotify.disabled = true;
+    $sysnotify.parentElement.title = 'System notifications unavailable in this context';
+  }
+  $sysnotify.onchange = async () => {
+    if (!$sysnotify.checked) { state.notifyOn = false; return; }
+    if (Notification.permission === 'granted') { state.notifyOn = true; return; }
+    if (Notification.permission === 'denied') {
+      state.notifyOn = false;
+      $sysnotify.checked = false;
+      alert('System notifications blocked. Enable them in the browser/site settings.');
+      return;
+    }
+    const res = await Notification.requestPermission();
+    state.notifyOn = res === 'granted';
+    if (!state.notifyOn) $sysnotify.checked = false;
+  };
+
+  function fireSystemNotification(evt) {
+    if (!state.notifyOn || Notification.permission !== 'granted') return;
+    const sev = SEVERITY[evt.type] || 'info';
+    try {
+      const n = new Notification('Claude: ' + evt.type, {
+        body: evt.msg || '',
+        tag: evt.id,
+        silent: !state.soundOn,
+        requireInteraction: sev !== 'info'
+      });
+      n.onclick = () => {
+        window.focus();
+        transport.sendFocus(evt.id);
+        transport.sendDismiss(evt.id);
+        state.unread.delete(evt.id);
+        schedule();
+        n.close();
+      };
+    } catch (_) {}
+  }
+
   document.getElementById('mark-all').onclick = () => { state.unread.clear(); schedule(); };
   document.getElementById('clear').onclick = () => { state.events = []; state.unread.clear(); schedule(); };
 
@@ -242,6 +286,7 @@
     if (state.events.length > 1000) state.events.pop();
     state.unread.add(evt.id);
     if (state.soundOn) { try { $pling.play(); } catch (_) {} }
+    fireSystemNotification(evt);
     schedule();
   });
   transport.connect();
