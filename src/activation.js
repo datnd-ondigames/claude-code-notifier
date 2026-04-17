@@ -30,6 +30,10 @@ function activate(context) {
     if (next.logPath !== prev.logPath) { tailer.stop(); tailer.start(); }
   });
 
+  const { createSound } = require('./sound');
+  const sound = createSound({ mediaRoot: context.asAbsolutePath('media'), output });
+  context.subscriptions.push(vscode.commands.registerCommand('claudeNotifier._testSound', () => sound.play('permission_prompt')));
+
   const testCmd = vscode.commands.registerCommand('claude-notifier.notify', () => {
     vscode.window.showInformationMessage('Claude Notifier test notification');
   });
