@@ -7,6 +7,21 @@ async function activate(context) {
   output = vscode.window.createOutputChannel('Claude Notifier');
   output.appendLine('[activation] Claude Notifier 2.0 starting');
 
+  const fsLocal = require('fs');
+  async function maybeNotifyLegacy() {
+    const legacyFile = '/tmp/claude-notify';
+    const flagKey = 'claudeNotifier.legacyMigrationNotified';
+    if (context.globalState.get(flagKey)) return;
+    if (!fsLocal.existsSync(legacyFile)) return;
+    const pick = await vscode.window.showInformationMessage(
+      'Claude Notifier 2.0 uses a new log format. Run Setup Wizard to migrate?',
+      'Run Setup', 'Later'
+    );
+    await context.globalState.update(flagKey, true);
+    if (pick === 'Run Setup') vscode.commands.executeCommand('claudeNotifier.runWizard');
+  }
+  maybeNotifyLegacy().catch(e => output.appendLine('[migrate] ' + e.message));
+
   const { createConfig } = require('./config');
   const config = createConfig();
   output.appendLine('[activation] config: ' + JSON.stringify(config.get()));

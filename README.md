@@ -1,144 +1,47 @@
-# Claude Code Notifier
+# Claude Code Notifier 2.0
 
-Never miss when Claude Code needs your attention! Get instant VS Code notifications when Claude asks questions, needs permissions, or waits for your input.
+VS Code extension that turns Claude Code hook events into toasts, a history panel, a status bar badge, and a live dashboard (in-editor webview or external browser tab).
 
-## ✨ Features
-
-- 🔔 **VS Code Notifications**: Get notified directly in VS Code when Claude needs you
-- 🎯 **Smart Triggers**: Monitors permission requests, questions, and idle states
-- ⚡ **Zero Configuration**: Works automatically once installed
-- 🔧 **Customizable**: Easy to configure with Claude Code hooks
-
-## 📦 Installation
-
-### Step 1: Install the Extension
-
-Install from the VS Code marketplace or:
+## Install
 
 ```bash
 code --install-extension erdemgiray.claude-code-notifier
 ```
 
-### Step 2: Configure Claude Code Hooks
+First launch shows a welcome toast. Click **Run Setup** and pick:
 
-Add the following hooks configuration to your Claude Code settings:
+- **Scope:** Global (all projects) / Workspace (current folder) / Both
+- **Preset:** Minimal / Standard / All / Custom
+- **Sound:** on or off
 
-**For global notifications (all projects):**
-Add to `~/.claude/settings.local.json`:
+The wizard installs a small helper script at `~/.claude/notifier-emit.js` and merges hook entries into `settings.local.json`. Every managed entry ends with `# claude-code-notifier` so re-install and uninstall are idempotent. Restart Claude Code for the hooks to take effect.
 
-**For project-specific notifications:**
-Add to `.claude/settings.local.json` in your project directory:
+## Commands
 
-```json
-{
-  "hooks": {
-    "Notification": [
-      {
-        "matcher": "permission_prompt",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "echo 'Claude needs your permission' > /tmp/claude-notify && terminal-notifier -title \"Claude Code\" -message \"Claude needs your permission\" -sound Glass"
-          }
-        ]
-      },
-      {
-        "matcher": "elicitation_dialog",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "echo 'Claude has a question for you' > /tmp/claude-notify && terminal-notifier -title \"Claude Code\" -message \"Claude has a question for you\" -sound Glass"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
+- `Claude Notifier: Run Setup Wizard`
+- `Claude Notifier: Install Hooks` — re-install the last-used preset
+- `Claude Notifier: Remove Hooks` — walk settings files, remove managed entries; optional cleanup of legacy `/tmp/claude-notify` hooks
+- `Claude Notifier: Open Panel` — in-editor webview
+- `Claude Notifier: Open Dashboard in Browser` — external SSE dashboard
+- `Claude Notifier: Clear History`
+- `Claude Notifier: Show Log File`
 
-### Step 3: Install terminal-notifier (macOS only - optional)
+## Dashboard
 
-The hooks configuration above includes `terminal-notifier` for system-level notifications. Install it with:
+Local HTTP server binds `127.0.0.1` only, auto-picks a port starting at `37100`. One server per VS Code window. Status bar shows `Claude :<port>` plus unread count.
 
-```bash
-brew install terminal-notifier
-```
+## Settings
 
-**Note:** If you don't want system notifications, simply remove the `&& terminal-notifier...` part from each command.
+See `package.json` `contributes.configuration` for the full list. Highlights:
 
-## 🚀 Usage
+- `claudeNotifier.suppressWhenFocused` — skip toast/sound while window is focused; history still records.
+- `claudeNotifier.showAllWorkspaces` — by default toasts only fire for events whose `cwd` matches this window's folder.
+- `claudeNotifier.events.<type>.{enabled,severity,sound}` — per-event controls for permission_prompt, elicitation_dialog, idle_prompt, stop, subagent_stop.
 
-Once installed and configured, the extension works automatically:
+## Legacy 1.x
 
-1. **Permission Requests**: Get notified when Claude needs permission to run commands
-2. **Questions**: Get notified when Claude asks you questions via `AskUserQuestion`
+1.x watched `/tmp/claude-notify` and only supported plain-text messages. On 2.0 activation a one-time toast asks to migrate. Use `Claude Notifier: Remove Hooks` with legacy cleanup selected, then rerun the wizard.
 
-**Note:** The configuration excludes `idle_prompt` (task completion notifications) to reduce notification noise. You'll only be notified when Claude is blocked and needs your input.
-
-## 🧪 Testing
-
-Test the extension by running the command palette (`Cmd+Shift+P`) and searching for:
-
-```
-Claude Code: Send Test Notification
-```
-
-You should see a notification appear in VS Code.
-
-## 🛠️ How It Works
-
-The extension watches a trigger file at `/tmp/claude-notify` for changes. When Claude Code hooks write to this file, the extension reads the message and displays it as a VS Code notification.
-
-## 📝 Customization
-
-### Custom Messages
-
-You can customize the notification messages by editing the hooks configuration. Change the text after `echo` to customize what appears in the notification.
-
-Example:
-```json
-"command": "echo 'Hey! Claude needs you!' > /tmp/claude-notify"
-```
-
-### Optional: Task Completion Notifications
-
-If you want to be notified when Claude finishes tasks and is waiting for your next input, add the `idle_prompt` hook:
-
-```json
-{
-  "matcher": "idle_prompt",
-  "hooks": [
-    {
-      "type": "command",
-      "command": "echo 'Claude is waiting for your input' > /tmp/claude-notify && terminal-notifier -title \"Claude Code\" -message \"Claude is waiting for your input\" -sound Glass"
-    }
-  ]
-}
-```
-
-**Note:** This can be noisy if you prefer to monitor Claude's progress yourself. Most users only need `permission_prompt` and `elicitation_dialog`.
-
-## 🐛 Troubleshooting
-
-**Notifications not appearing?**
-- Ensure the extension is installed and activated (check Extensions panel)
-- Verify hooks are configured in `.claude/settings.local.json`
-- Check that `/tmp/claude-notify` file exists
-- Run the test command to verify the extension is working
-
-**System notifications not working?**
-- Install `terminal-notifier` via Homebrew
-- Or remove the terminal-notifier part from the hooks
-
-## 📄 License
+## License
 
 MIT
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit issues or pull requests.
-
-## ⭐ Support
-
-If you find this extension helpful, please star the repository and share it with others!
-# claude-code-notifier
