@@ -55,6 +55,10 @@ function activate(context) {
   const statusBar = createStatusBar({ config, history, notifier, getPort: () => serverPort, output });
   disposables.push(statusBar);
 
+  const wizard = require('./wizard');
+  wizard.register(context, output);
+  wizard.maybeRunFirstRun(context).catch(e => output.appendLine('[wizard] ' + e.message));
+
   const testCmd = vscode.commands.registerCommand('claude-notifier.notify', () => {
     vscode.window.showInformationMessage('Claude Notifier test notification');
   });
